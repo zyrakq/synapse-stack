@@ -1,0 +1,90 @@
+services:
+  synapse-db:
+    image: docker.io/postgres:alpine
+    container_name: synapse-db
+    restart: unless-stopped
+    environment:
+      TZ: ${MATRIX_TZ}
+      POSTGRES_DB: ${POSTGRES_DB:-synapse}
+      POSTGRES_USER: ${POSTGRES_USER:-synapse}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-synapse}
+      POSTGRES_INITDB_ARGS: ${POSTGRES_INITDB_ARGS}
+    healthcheck:
+      test: ["CMD-SHELL", "/bin/sh", "-c", "exec pg_isready -h 127.0.0.1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - synapse-db:/var/lib/postgresql/data
+    networks:
+      - synapse-network
+  synapse:
+    image: matrixdotorg/synapse:${SYNAPSE_VERSION}
+    container_name: synapse
+    restart: unless-stopped
+    environment:
+      TZ: ${SYNAPSE_TZ}
+      SYNAPSE_PID_FILE: ${SYNAPSE_PID_FILE:-/data/homeserver.pid}
+      SYNAPSE_CONFIG_PATH: ${SYNAPSE_CONFIG_PATH:-/opt/synapse/homeserver.yaml}
+      SYNAPSE_MEDIA_STORE_PATH: ${SYNAPSE_MEDIA_STORE_PATH:-/data/media_store}
+      SYNAPSE_SIGNING_KEY_PATH: ${SYNAPSE_SIGNING_KEY_PATH:-/opt/key/synapse.signing.key}
+      SYNAPSE_REPORT_STATS: ${SYNAPSE_REPORT_STATS:-no}
+      SYNAPSE_REGISTRATION_SHARED_SECRET: ${SYNAPSE_REGISTRATION_SHARED_SECRET}
+      SYNAPSE_MACAROON_SECRET_KEY: ${SYNAPSE_MACAROON_SECRET_KEY}
+      SYNAPSE_FORM_SECRET: ${SYNAPSE_FORM_SECRET}
+      SYNAPSE_SERVER_NAME: ${SYNAPSE_SERVER_NAME:-localhost}
+    volumes:
+      - synapse-data:/data:rw
+    configs:
+      - source: homeserver
+        target: ${SYNAPSE_CONFIG_PATH:-/opt/synapse/homeserver.yaml}
+    depends_on:
+      - synapse-db
+    networks:
+      - synapse-network
+      - synapse-workspace-network
+volumes:
+  synapse-db:
+    name: synapse-db
+    driver: local
+  synapse-data:
+    name: synapse-data
+    driver: local
+networks:
+  synapse-network:
+    name: synapse-network
+  synapse-workspace-network:
+    external: true
+configs:
+  homeserver:
+    content: |-
+      listeners:
+        - port: 8008
+          tls: false
+          type: http
+          x_forwarded: true
+          resources:
+            - names: [client, federation]
+              compress: false
+      database:
+        name: psycopg2
+        txn_limit: 10000
+        args:
+          user: ${POSTGRES_USER:-synapse}
+          password: ${POSTGRES_PASSWORD:-synapse}
+          database: ${POSTGRES_DB:-synapse}
+          host: synapse-db
+          port: 5432
+          cp_min: 5
+          cp_max: 10
+      oidc_providers:
+        - idp_id: ${OIDC_PROVIDER_IDP_ID}
+          idp_name: "${OIDC_PROVIDER_IDP_NAME}"
+          issuer: "${OIDC_PROVIDER_ISSUER}"
+          client_id: "${OIDC_PROVIDER_CLIENT_ID}"
+          client_secret: "${OIDC_PROVIDER_CLIENT_SECRET}"
+          scopes: ${OIDC_PROVIDER_SCOPES}
+          user_mapping_provider:
+            config:
+              localpart_template: "{{ ${OIDC_PROVIDER_LOCALPART_TEMPLATE} }}"
+              display_name_template: "{{ ${OIDC_PROVIDER_DISPLAY_NAME_TEMPLATE} }}"

@@ -1,0 +1,10 @@
+services:
+  synapse-db:
+    ports:
+      - "5432:5432"
+
+  synapse:
+    environment:
+      SYNAPSE_SERVER_NAME: ${SYNAPSE_SERVER_NAME:-localhost}
+    ports:
+      - "8008:8008"

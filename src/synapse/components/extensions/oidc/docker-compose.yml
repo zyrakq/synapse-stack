@@ -1,0 +1,33 @@
+configs:
+  homeserver:
+    content: |
+      listeners:
+        - port: 8008
+          tls: false
+          type: http
+          x_forwarded: true
+          resources:
+            - names: [client, federation]
+              compress: false
+      database:
+        name: psycopg2
+        txn_limit: 10000
+        args:
+          user: ${POSTGRES_USER:-synapse}
+          password: ${POSTGRES_PASSWORD:-synapse}
+          database: ${POSTGRES_DB:-synapse}
+          host: synapse-db
+          port: 5432
+          cp_min: 5
+          cp_max: 10
+      oidc_providers:
+        - idp_id: ${OIDC_PROVIDER_IDP_ID}
+          idp_name: "${OIDC_PROVIDER_IDP_NAME}"
+          issuer: "${OIDC_PROVIDER_ISSUER}"
+          client_id: "${OIDC_PROVIDER_CLIENT_ID}"
+          client_secret: "${OIDC_PROVIDER_CLIENT_SECRET}"
+          scopes: ${OIDC_PROVIDER_SCOPES}
+          user_mapping_provider:
+            config:
+              localpart_template: "{{ ${OIDC_PROVIDER_LOCALPART_TEMPLATE} }}"
+              display_name_template: "{{ ${OIDC_PROVIDER_DISPLAY_NAME_TEMPLATE} }}"

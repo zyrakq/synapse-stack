@@ -1,0 +1,10 @@
+services:
+  synapse:
+    environment:
+      SYNAPSE_SERVER_NAME: ${SYNAPSE_SERVER_NAME:-localhost}
+    networks:
+      - synapse-workspace-network
+
+networks:
+  synapse-workspace-network:
+    external: true

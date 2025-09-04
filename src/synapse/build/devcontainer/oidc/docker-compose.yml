@@ -9,6 +9,11 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-synapse}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-synapse}
       POSTGRES_INITDB_ARGS: ${POSTGRES_INITDB_ARGS}
+    logging:
+      driver: "json-file"
+      options:
+        max-size: 10m
+        max-file: 3
     healthcheck:
       test: ["CMD-SHELL", "/bin/sh", "-c", "exec pg_isready -h 127.0.0.1"]
       interval: 5s
@@ -33,6 +38,11 @@ services:
       SYNAPSE_MACAROON_SECRET_KEY: ${SYNAPSE_MACAROON_SECRET_KEY}
       SYNAPSE_FORM_SECRET: ${SYNAPSE_FORM_SECRET}
       SYNAPSE_SERVER_NAME: ${SYNAPSE_SERVER_NAME:-localhost}
+    logging:
+      driver: "json-file"
+      options:
+        max-size: 10m
+        max-file: 3
     volumes:
       - synapse-data:/data:rw
     configs:

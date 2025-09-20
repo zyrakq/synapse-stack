@@ -42,6 +42,10 @@ services:
       VIRTUAL_HOST: ${VIRTUAL_HOST}
       LETSENCRYPT_HOST: ${LETSENCRYPT_HOST}
       LETSENCRYPT_EMAIL: ${LETSENCRYPT_EMAIL}
+      STEP_CA_TRUST: ${STEP_CA_TRUST:-true}
+      STEP_CA_TRUST_RESTART: ${STEP_CA_TRUST_RESTART:-true}
+      REQUESTS_CA_BUNDLE: ${REQUESTS_CA_BUNDLE:-/etc/ssl/certs/ca-certificates.crt}
+      SSL_CERT_FILE: ${SSL_CERT_FILE:-/etc/ssl/certs/ca-certificates.crt}
     logging:
       driver: "json-file"
       options:
@@ -91,14 +95,3 @@ configs:
           port: 5432
           cp_min: 5
           cp_max: 10
-      oidc_providers:
-        - idp_id: ${OIDC_PROVIDER_IDP_ID}
-          idp_name: "${OIDC_PROVIDER_IDP_NAME}"
-          issuer: "${OIDC_PROVIDER_ISSUER}"
-          client_id: "${OIDC_PROVIDER_CLIENT_ID}"
-          client_secret: "${OIDC_PROVIDER_CLIENT_SECRET}"
-          scopes: ${OIDC_PROVIDER_SCOPES}
-          user_mapping_provider:
-            config:
-              localpart_template: "{{ ${OIDC_PROVIDER_LOCALPART_TEMPLATE} }}"
-              display_name_template: "{{ ${OIDC_PROVIDER_DISPLAY_NAME_TEMPLATE} }}"
